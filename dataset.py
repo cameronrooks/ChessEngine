@@ -1,15 +1,15 @@
 import torch
 
-class ChessDataset(torch.utils.data.Datset):
+class ChessDataset(torch.utils.data.Dataset):
 	def __init__(self, data, labels):
-		this.data = data
-		this.labels = labels
+		self.data = data
+		self.labels = labels
 
 	def __len__(self):
-		return len(this.data)
+		return len(self.data)
 
 	def __getitem__(self, idx):
-		board = this.data[idx]
-		eval = this.labels[idx]
+		board = self.data[idx]
+		eval = self.labels[idx]
 
 		return board, eval

@@ -14,18 +14,52 @@ def get_eval(eval):
 	elif "+" in eval:
 		eval = eval.lstrip("+")
 		eval = int(eval)
+	else:
+		eval = int(eval)
 
+	eval = eval/100
 	return eval
 
 def encode_board(fen):
 	encoded_board = np.zeros((6, 8, 8))
 	counter = 0
 
-	for char in fen:
+	to_move = 0
+	wck = 0
+	wcq = 0
+	bck = 0
+	bcq = 0
+
+	for i in range(len(fen)):
+		char = fen[i]
+
 		channel = 0
 		sign = 1
 
 		if char == " ":
+
+			i = i + 1
+
+			if (fen[i] == 'b'):
+				to_move = -1
+			else:
+				to_move = 1
+
+			i = i + 2
+
+			for x in range(4):
+				if(fen[i] == " " or fen[i] == "-"):
+					break
+				if(fen[i] == "Q"):
+					wcq = 1
+				if(fen[i] == "K"):
+					wck = 1
+				if(fen[i] == "q"):
+					bcq = 1
+				if(fen[i] == "k"):
+					bck = 1
+
+				i = i + 1
 			break
 
 		if char == "/":
@@ -82,6 +116,15 @@ def encode_board(fen):
 
 		encoded_board[channel][rank][file] = sign
 
+
+	encoded_board = encoded_board.flatten()
+	encoded_board = np.append(encoded_board, to_move)
+	encoded_board = np.append(encoded_board, wck)
+	encoded_board = np.append(encoded_board, wcq)
+	encoded_board = np.append(encoded_board, bck)
+	encoded_board = np.append(encoded_board, bcq)
+
+
 	return encoded_board
 
 
@@ -111,13 +154,34 @@ for row in data:
 
 
 board_list = np.array(board_list, dtype='int8')
-label_list = np.array(label_list, dtype = 'int32')
+label_list = np.array(label_list, dtype = 'float32')
 
-h5f = h5py.File('./data/ChessData.h5', 'w')
-h5f.create_dataset('boards', data = board_list)
-h5f.create_dataset('labels', data = label_list)
 
-h5f.close()
+#split dataset into test and train
+
+train_size = int(.8 * board_list.shape[0])
+
+board_list = np.split(board_list, [train_size])
+label_list = np.split(label_lsit, [train_size])
+
+x_train = board_list[0]
+x_test = board_list[1]
+y_train = label_list[0]
+y_test = label_list[1]
+
+
+#save clean data to h5py files
+h5f_train = h5py.File('./data/TrainData.h5', 'w')
+h5f_test = h5py.File('./data/TestData.h5', 'w')
+
+h5f_train.create_dataset('boards', data = x_train)
+h5f_train.create_dataset('labels', data = y_train)
+
+h5f_test.create_dataset('boards', data = x_test)
+h5f_test.create_dataset('labels', data = y_test)
+
+h5f_boards.close()
+h5f_evals.close()
 
 
 
