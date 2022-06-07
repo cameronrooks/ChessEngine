@@ -4,23 +4,54 @@ import numpy as np
 import dataset
 import model
 import sys
+import os
 
 
-batch_size_ = 10
-num_epochs = 25
-
-#load the preprocessed data
-h5f_boards = h5py.File('./data/ChessData.h5', 'r')
-h5f_labels = h5py.File('./data/ChessLabels.h5', 'r')
-
-boards = h5f_boards['boards'][:]
-labels = h5f_labels['labels'][:]
-
-h5f_boards.close()
-h5f_labels
+batch_size_ = int(sys.argv[1])
+num_epochs = int(sys.argv[2])
+model_dir = sys.argv[3]
+starting_epoch = 1
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+#set up the model
+model = model.Net()
+
+model.to(device)
+
+
+#if resuming training, load state dict from most recent epoch
+weight_files = os.listdir(model_dir)
+if(len(weight_files) > 0):
+
+	model_path = ""
+	for file_name in weight_files:
+    
+		index = file_name.find("epoch")
+		index = index + 5
+		temp = file_name[index:]
+        
+		if(int(temp) >= starting_epoch):
+			starting_epoch = int(temp)
+			model_path = file_name
+
+	starting_epoch += 1
+	model_path = model_dir + "/" + model_path
+	model.load_state_dict(torch.load(model_path))
+
+#load the data
+h5f = h5py.File('./data/TrainData.h5', 'r')
+
+boards = h5f['boards'][:]
+labels = h5f['labels'][:]
+
+print(len(np.where(labels < 0)[0]))
+print(len(np.where(labels > 0)[0]))
+
+n = boards.shape[0]
+
+h5f.close()
 
 #convert numpy arrays to torch tensors
 x_data = torch.from_numpy(boards)
@@ -29,54 +60,40 @@ y_data = torch.from_numpy(labels)
 x_data = x_data.float()
 y_data = y_data.float()
 
-sys.stdout.flush()
-
-train_size = int(0.8 * len(x_data))
-test_size = len(x_data) - train_size
-
 
 data = dataset.ChessDataset(x_data, y_data)
 
 
-#split data into train and test
-train_dataset, test_dataset = torch.utils.data.random_split(data, [train_size, test_size])
-
 #create data loaders
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_size_, shuffle = True, num_workers = 0)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size_, shuffle = True, num_workers = 0)
+train_loader = torch.utils.data.DataLoader(data, batch_size = batch_size_, shuffle = True, num_workers = 0)
 
-
-#set up the model
-model = model.Net()
-model.to(device)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.7)
 loss_fn = torch.nn.MSELoss()
 
 #training loop
 for x in range(num_epochs):
 	running_loss = 0
+	progress = 0
 
 
 	for i, data in enumerate(train_loader):
 
-		if ((i * batch_size_) % 250000 == 0):
-			print(i*batch_size_)
-			sys.stdout.flush()
+		if (((i * batch_size_) / n) * 100 >= progress):
+			print(str(progress) + "%")
+			progress += 25
 
+		
+		#features and labels
 		inputs, labels = data
-
 		inputs, labels = inputs.to(device), labels.to(device)
 
-
-		#print(inputs.shape)
-		#print(labels.shape)
-
+		#zero gradients
 		optimizer.zero_grad()
 
+		#get model predictions
 		pred = model(inputs)
 
-		sys.stdout.flush()
-
+		#compute loss and perform backward pass
 		loss = loss_fn(pred, labels)
 		loss.backward()
 
@@ -86,7 +103,6 @@ for x in range(num_epochs):
 		optimizer.step()
 
 
-	print("epoch" + str(x) + ": loss = " + str(running_loss))
+	print("epoch " + str(x + starting_epoch) + ": loss = " + str(running_loss))
+	torch.save(model.state_dict(), model_dir + "/epoch" + str(starting_epoch + x))
 
-
-torch.save(model.state_dict(), "./trained_models/model")
