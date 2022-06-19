@@ -4,7 +4,7 @@ import model
 import h5py
 import dataset
 
-model_path = "./trained_models/model6/epoch113"
+model_path = "./trained_models/model8/epoch1"
 batch_size_ = 256
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -15,7 +15,7 @@ model.to(device)
 model.load_state_dict(torch.load(model_path))
 model.eval()
 
-h5f = h5py.File('./data/TestData.h5', 'r')
+h5f = h5py.File('./data/TestDataSparse.h5', 'r')
 
 boards = h5f['boards'][:]
 labels = h5f['labels'][:]

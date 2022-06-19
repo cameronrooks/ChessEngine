@@ -41,7 +41,7 @@ if(len(weight_files) > 0):
 	model.load_state_dict(torch.load(model_path))
 
 #load the data
-h5f = h5py.File('./data/TrainData.h5', 'r')
+h5f = h5py.File('./data/TrainDataSparse.h5', 'r')
 
 boards = h5f['boards'][:]
 labels = h5f['labels'][:]

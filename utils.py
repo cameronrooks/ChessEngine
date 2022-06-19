@@ -1,11 +1,11 @@
 import numpy as np
 
 def encode_board(fen):
-	encoded_board = np.zeros((6, 8, 8))
+	encoded_board = np.zeros((12, 8, 8), dtype = 'int8')
 	counter = 0
+	flip = 0
 
 	#variables for castling rights and whose turn it is
-	to_move = 0
 	wck = 0
 	wcq = 0
 	bck = 0
@@ -22,7 +22,7 @@ def encode_board(fen):
 			i = i + 1
 
 			if (fen[i] == 'b'):
-				to_move = -1
+				to_move = 0
 			else:
 				to_move = 1
 
@@ -59,47 +59,45 @@ def encode_board(fen):
 		match char:
 			case "p":
 				channel = 0
-				sign = -1
+				sign = 1
 			case "P":
-				channel = 0
+				channel = 1
 				sign = 1
 			case "n":
-				channel = 1
-				sign = -1
+				channel = 2
+				sign = 1
 			case "N":
-				channel = 1
+				channel = 3
 				sign = 1
 			case "r":
-				channel = 2
-				sign = -1
+				channel = 4
+				sign = 1
 			case "R":
-				channel = 2
+				channel = 5
 				sign = 1
 			case "b":
-				channel = 3
-				sign = -1
+				channel = 6
+				sign = 1
 			case "B":
-				channel = 3
+				channel = 7
 				sign = 1
 			case "q":
-				channel = 4
-				sign = -1
+				channel = 8
+				sign = 1
 			case "Q":
-				channel = 4
+				channel = 9
 				sign = 1
 			case "k":
-				channel = 5
-				sign = -1
+				channel = 10
+				sign = 1
 			case "K":
-				channel = 5
+				channel = 11
 				sign = 1
 
 
-		encoded_board[channel][rank][file_] = sign
+		encoded_board[channel][rank][file_] = sign 
 
 
-
-	
 	encoded_board = encoded_board.flatten()
 	encoded_board = np.append(encoded_board, [to_move, wck, wcq, bck, bcq])
 

@@ -8,7 +8,7 @@ class Net(nn.Module):
 
 	def __init__(self):
 		super(Net, self).__init__()
-		self.fc1 = nn.Linear(384, 2048)
+		self.fc1 = nn.Linear(773, 2048)
 		self.batch_norm1 = nn.BatchNorm1d(2048)
 		self.fc2 = nn.Linear(2048, 2048)
 		self.batch_norm2 = nn.BatchNorm1d(2048)

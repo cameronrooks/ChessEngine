@@ -5,14 +5,9 @@ import sys
 import h5py
 from sklearn.model_selection import train_test_split
 
-def get_eval(eval, to_move):
+def get_eval(eval):
 	#print(eval)
-	flip = 0
 
-	if (to_move == "w"):
-		flip = 1
-	else:
-		flip = -1
 
 	if "#" in eval:
 		if("-" in eval):
@@ -27,10 +22,10 @@ def get_eval(eval, to_move):
 		eval = int(eval)
 
 	eval = eval/100
-	return eval * flip
+	return eval
 
-def encode_board(fen, to_move):
-	encoded_board = np.zeros((6, 8, 8))
+def encode_board(fen):
+	encoded_board = np.zeros((12, 8, 8), dtype = 'int8')
 	counter = 0
 	flip = 0
 
@@ -39,11 +34,6 @@ def encode_board(fen, to_move):
 	wcq = 0
 	bck = 0
 	bcq = 0
-
-	if (to_move == "w"):
-		flip = 1
-	else:
-		flip = -1
 
 	for i in range(len(fen)):
 		char = fen[i]
@@ -56,7 +46,7 @@ def encode_board(fen, to_move):
 			i = i + 1
 
 			if (fen[i] == 'b'):
-				to_move = -1
+				to_move = 0
 			else:
 				to_move = 1
 
@@ -93,47 +83,47 @@ def encode_board(fen, to_move):
 		match char:
 			case "p":
 				channel = 0
-				sign = -1
+				sign = 1
 			case "P":
-				channel = 0
+				channel = 1
 				sign = 1
 			case "n":
-				channel = 1
-				sign = -1
+				channel = 2
+				sign = 1
 			case "N":
-				channel = 1
+				channel = 3
 				sign = 1
 			case "r":
-				channel = 2
-				sign = -1
+				channel = 4
+				sign = 1
 			case "R":
-				channel = 2
+				channel = 5
 				sign = 1
 			case "b":
-				channel = 3
-				sign = -1
+				channel = 6
+				sign = 1
 			case "B":
-				channel = 3
+				channel = 7
 				sign = 1
 			case "q":
-				channel = 4
-				sign = -1
+				channel = 8
+				sign = 1
 			case "Q":
-				channel = 4
+				channel = 9
 				sign = 1
 			case "k":
-				channel = 5
-				sign = -1
+				channel = 10
+				sign = 1
 			case "K":
-				channel = 5
+				channel = 11
 				sign = 1
 
 
-		encoded_board[channel][rank][file_] = sign * flip
+		encoded_board[channel][rank][file_] = sign 
 
 
 	encoded_board = encoded_board.flatten()
-	encoded_board = np.append(encoded_board, [to_move])
+	encoded_board = np.append(encoded_board, [to_move, wck, wcq, bck, bcq])
 
 
 	return encoded_board
@@ -153,12 +143,12 @@ def get_data(data, board_list, label_list):
 		else:
 			to_move = "b"
 
-		eval = get_eval(eval, to_move)
+		eval = get_eval(eval)
 
 		if (eval == "SKIP"):
 			continue
 
-		board_list.append(encode_board(fen, to_move))
+		board_list.append(encode_board(fen))
 		label_list.append(eval)
 		if counter%500000 == 0:
 			print(counter)
@@ -201,8 +191,8 @@ x_train, x_test, y_train, y_test = train_test_split(board_list,label_list, test_
 
 
 #save clean data to h5py files
-h5f_train = h5py.File('./data/TrainData.h5', 'w')
-h5f_test = h5py.File('./data/TestData.h5', 'w')
+h5f_train = h5py.File('./data/TrainDataSparse.h5', 'w')
+h5f_test = h5py.File('./data/TestDataSparse.h5', 'w')
 
 h5f_train.create_dataset('boards', data = x_train)
 h5f_train.create_dataset('labels', data = y_train)
