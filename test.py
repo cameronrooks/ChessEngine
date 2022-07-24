@@ -4,7 +4,7 @@ import model
 import h5py
 import dataset
 
-model_path = "./trained_models/model8/epoch1"
+model_path = "./trained_models/model9/epoch62"
 batch_size_ = 256
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

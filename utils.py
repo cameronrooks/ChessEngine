@@ -1,5 +1,39 @@
 import numpy as np
 
+
+
+def get_eval_from_model_output(num, max_eval=50, min_eval=-50):
+	eval = ((1 + num) / 2) * (max_eval - min_eval) + min_eval
+
+	return eval
+
+
+def get_eval(eval, max_eval = 50, min_eval = -50):
+
+	if "#" in eval:
+		if("-" in eval):
+			return -100
+		return 100
+	elif "-" in eval:
+		eval = int(eval)
+	elif "+" in eval:
+		eval = eval.lstrip("+")
+		eval = int(eval)
+	else:
+		eval = int(eval)
+
+	eval = eval/100
+
+	if (eval > max_eval):
+		eval = max_eval
+	if (eval < min_eval):
+		eval = min_eval
+
+	#normalize the evals to be in the range [0,1]
+	eval = 2 * ((eval - min_eval)/(max_eval - min_eval)) - 1
+
+	return eval
+
 def encode_board(fen):
 	encoded_board = np.zeros((12, 8, 8), dtype = 'int8')
 	counter = 0
