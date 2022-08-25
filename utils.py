@@ -1,5 +1,34 @@
 import numpy as np
+import torch
+import os
+import model
+import h5py
+import dataset
 
+def test_(model, model_path, data_loader, device):
+    batch_size_ = 256
+
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+
+    loss_fn = torch.nn.MSELoss()
+
+    sum = 0
+
+    running_loss = 0
+    for i, data in enumerate(data_loader):
+        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        pred = model(inputs)
+
+        loss = loss_fn(pred, labels)
+        running_loss += loss.item()
+
+
+        sum += torch.sum(torch.abs(torch.sub(pred, labels))).item()
+
+    return running_loss
 
 
 def get_eval_from_model_output(num, max_eval=50, min_eval=-50):
@@ -134,6 +163,110 @@ def encode_board(fen):
 
 	encoded_board = encoded_board.flatten()
 	encoded_board = np.append(encoded_board, [to_move, wck, wcq, bck, bcq])
+
+
+	return encoded_board
+
+def encode_board_without_turnbit(fen):
+	encoded_board = np.zeros((12, 8, 8), dtype = 'int8')
+	counter = 0
+	flip = 0
+
+	#variables for castling rights and whose turn it is
+	wck = 0
+	wcq = 0
+	bck = 0
+	bcq = 0
+
+	for i in range(len(fen)):
+		char = fen[i]
+
+		channel = 0
+		sign = 1
+
+		if char == " ":
+
+			i = i + 1
+
+			if (fen[i] == 'b'):
+				to_move = 0
+			else:
+				to_move = 1
+
+			i = i + 2
+
+			for x in range(4):
+				if(fen[i] == " " or fen[i] == "-"):
+					break
+				if(fen[i] == "Q"):
+					wcq = 1
+				if(fen[i] == "K"):
+					wck = 1
+				if(fen[i] == "q"):
+					bcq = 1
+				if(fen[i] == "k"):
+					bck = 1
+
+				i = i + 1
+			break
+
+		if char == "/":
+			continue
+
+		if char.isdigit():
+			char = int(char)
+			counter += char
+			continue
+
+		rank = counter//8
+		file_ = counter%8
+
+		counter += 1
+
+		match char:
+			case "p":
+				channel = 0
+				sign = 1
+			case "P":
+				channel = 1
+				sign = 1
+			case "n":
+				channel = 2
+				sign = 1
+			case "N":
+				channel = 3
+				sign = 1
+			case "r":
+				channel = 4
+				sign = 1
+			case "R":
+				channel = 5
+				sign = 1
+			case "b":
+				channel = 6
+				sign = 1
+			case "B":
+				channel = 7
+				sign = 1
+			case "q":
+				channel = 8
+				sign = 1
+			case "Q":
+				channel = 9
+				sign = 1
+			case "k":
+				channel = 10
+				sign = 1
+			case "K":
+				channel = 11
+				sign = 1
+
+
+		encoded_board[channel][rank][file_] = sign 
+
+
+	encoded_board = encoded_board.flatten()
+	encoded_board = np.append(encoded_board, [wck, wcq, bck, bcq])
 
 
 	return encoded_board

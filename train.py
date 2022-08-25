@@ -22,7 +22,7 @@ model.to(device)
 
 
 #if resuming training, load state dict from most recent epoch
-weight_files = os.listdir(model_dir)
+weight_files = os.listdir(model_dir + "/epochs")
 if(len(weight_files) > 0):
 
 	model_path = ""
@@ -37,11 +37,14 @@ if(len(weight_files) > 0):
 			model_path = file_name
 
 	starting_epoch += 1
-	model_path = model_dir + "/" + model_path
+	model_path = model_dir + "/epochs/" + model_path
 	model.load_state_dict(torch.load(model_path))
 
+
+loss_text_file = open(model_dir + "/train_losses.txt", 'a')
+
 #load the data
-h5f = h5py.File('./data/TrainDataSparse.h5', 'r')
+h5f = h5py.File('./data/TrainDataSparse2.h5', 'r')
 
 boards = h5f['boards'][:]
 labels = h5f['labels'][:]
@@ -79,7 +82,7 @@ for x in range(num_epochs):
 	for i, data in enumerate(train_loader):
 
 		if (((i * batch_size_) / n) * 100 >= progress):
-			print(str(progress) + "%")
+			print(str(progress) + "%", flush = True)
 			progress += 25
 
 		
@@ -104,5 +107,7 @@ for x in range(num_epochs):
 
 
 	print("epoch " + str(x + starting_epoch) + ": loss = " + str(running_loss))
-	torch.save(model.state_dict(), model_dir + "/epoch" + str(starting_epoch + x))
+	torch.save(model.state_dict(), model_dir + "/epochs/epoch" + str(starting_epoch + x))
 
+	loss_text_file.write(str(running_loss))
+	loss_text_file.write('\n')

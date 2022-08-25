@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import h5py
 from sklearn.model_selection import train_test_split
-from utils import get_eval, encode_board
+from utils import get_eval, encode_board, encode_board_without_turnbit
 
 
 def get_data(data, board_list, label_list):
@@ -69,8 +69,8 @@ x_train, x_test, y_train, y_test = train_test_split(board_list,label_list, test_
 
 
 #save clean data to h5py files
-h5f_train = h5py.File('./data/TrainDataSparse.h5', 'w')
-h5f_test = h5py.File('./data/TestDataSparse.h5', 'w')
+h5f_train = h5py.File('./data/TrainDataSparse2.h5', 'w')
+h5f_test = h5py.File('./data/TestDataSparse2.h5', 'w')
 
 h5f_train.create_dataset('boards', data = x_train)
 h5f_train.create_dataset('labels', data = y_train)
